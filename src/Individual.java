@@ -1,11 +1,13 @@
 public class Individual
 {
-    double[][] niePamietam1;
-    double[][] niePamietam2;
+    double[][] distanceMatrix;
+    double[][] flowMatrix;
+    double[][] something;
 
-    public Individual(double[][] first, double[][] second)
+    public Individual(double[][] distanceMatrix, double[][] flowMatrix, double[][] something)
     {
-        niePamietam1 = first;
-        niePamietam2 = second;
+        this.distanceMatrix = distanceMatrix;
+        this.flowMatrix = flowMatrix;
+        this.something = something;
     }
 }
