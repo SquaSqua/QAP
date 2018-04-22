@@ -1,13 +1,21 @@
 public class Individual
 {
-    double[][] distanceMatrix;
-    double[][] flowMatrix;
-    double[][] something;
+    private int[] permutation;
 
-    public Individual(double[][] distanceMatrix, double[][] flowMatrix, double[][] something)
+    public Individual(int[] permutation)
     {
-        this.distanceMatrix = distanceMatrix;
-        this.flowMatrix = flowMatrix;
-        this.something = something;
+        this.permutation = new int[permutation.length];
+
+        for(int i = 0; i < permutation.length; i++){
+            this.permutation[i] = permutation[i];
+        }
+    }
+
+    public int[] getPermutation() {
+        return permutation;
+    }
+
+    public void setPermutation(int[] permutation) {
+        this.permutation = permutation;
     }
 }
