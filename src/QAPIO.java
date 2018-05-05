@@ -5,33 +5,32 @@ import java.io.IOException;
 
 public class QAPIO
 {
-    private int size;
+    private int individual_size;
     private int flowsNumber;
-    private Population population;
     private int[][][] matricesArray;
+    private int[][] distanceMatrix;
 
     public void readDefinition(String instanceFile) throws FileNotFoundException
     {
         BufferedReader in = new BufferedReader(new FileReader(instanceFile));
         try {
             String[] header = in.readLine().split(" +");
-            size = Integer.parseInt(header[0]);
+            individual_size = Integer.parseInt(header[0]);
             flowsNumber = Integer.parseInt(header[1]);
-            matricesArray = new int[flowsNumber][size][size];
+            matricesArray = new int[flowsNumber][individual_size][individual_size];
 
-            int[][] distanceMatrix = readArray(in, size);
+            distanceMatrix = readArray(in, individual_size);
             for(int i = 0; i < flowsNumber; i++)
             {
-                matricesArray[i] = readArray(in, size);
+                matricesArray[i] = readArray(in, individual_size);
             }
 
-            population = new Population(distanceMatrix, matricesArray);
         } catch (IOException e) {
             System.out.println("Nie znaleziono pliku!");
         }
     }
 
-    public int[][] readArray(BufferedReader in, int size) throws IOException
+    private int[][] readArray(BufferedReader in, int size) throws IOException
     {
         String nextLine;
         int[][] temp = new int[size][size];
@@ -40,7 +39,8 @@ public class QAPIO
         for(int i = 0; i < size; i++)
         {
             nextLine = in.readLine();
-            String[] line = nextLine.split(" +");
+            String[] line = nextLine.replaceFirst("^" + " ", "").split(" +");
+
             for(int j = 0; j < size; j++)
             {
                 temp[i][j] = Integer.parseInt(line[j]);
@@ -49,22 +49,24 @@ public class QAPIO
         return temp;
     }
 
-    public Population getPopulation() {
-        return population;
-    }
-    public void setPopulation(Population population) {
-        this.population = population;
-    }
     public int getFlowsNumber() {
         return flowsNumber;
     }
     public void setFlowsNumber(int flowsNumber) {
         flowsNumber = flowsNumber;
     }
-    public int getSize() {
-        return size;
+    public int getIndividual_size() {
+        return individual_size;
     }
-    public void setSize(int size) {
-        this.size = size;
+    public void setIndividual_size(int size) {
+        this.individual_size = size;
+    }
+    public int[][] getDistanceMatrix() { return distanceMatrix; }
+    public void setDistanceMatrix(int[][] distanceMatrix) {
+        this.distanceMatrix = distanceMatrix;
+    }
+    public int[][][] getMatricesArray() { return matricesArray; }
+    public void setMatricesArray(int[][][] matricesArray) {
+        this.matricesArray = matricesArray;
     }
 }
