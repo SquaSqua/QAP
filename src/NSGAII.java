@@ -245,7 +245,7 @@ public class NSGAII {
         ind.setPermutation(permutation);
     }
 
-    public Individual[] crossing_OrderedX(Individual ind1, Individual ind2)
+    public Individual[] crossing_OX(Individual ind1, Individual ind2)
     {
         Individual[] result = new Individual[2];
         if(Math.random() < cross_prob) {
@@ -261,15 +261,15 @@ public class NSGAII {
                 first = second;
                 second = temp;
             }
-            for(int i = first; i < second; i++) {
-                res1[i] = perm2[i];
-                res2[i] = perm1[i];
+            for(int i = first; i <= second; i++) {
+                res1[i] = perm1[i];
+                res2[i] = perm2[i];
             }
-            for(int i = 0; i < perm1.length; i++) {
-                if(i < first || i > second) {
+            res1 = fillTheRest(perm1, perm2, first, second, res1);
+            res2 = fillTheRest(perm2, perm1, first, second, res2);
+            result[0] = new Individual(res1, ind1.fitnessArray.length);
+            result[1] = new Individual(res2, ind2.fitnessArray.length);
 
-                }
-            }
         }
         else {
             result[0] = ind1;
@@ -277,11 +277,33 @@ public class NSGAII {
         }
         return result;
     }
-    public Individual[] crossing_CX(Individual ind1, Individual ind2) {
-        if()
+
+    public int[] fillTheRest(int[] perm1, int[] perm2, int first, int second, int[] res) {
+        int j = 0;
+        int[] result = res;
+        for(int i = 0; i < perm2.length; i++) {
+
+            boolean contains = false;
+            for(int z = first; z <= second && !contains; z++) {
+                if(perm1[z] == perm2[i]) {
+                    contains = true;
+                }
+            }
+            if(!contains) {
+                result[j] = perm2[i];
+                j++;
+                if(j == first) {
+                    j = second + 1;
+                }
+            }
+        }
+        return result;
     }
-    public Individual[] crossing_PMX(Individual ind1, Individual ind2) {
-        if()
-    }
+//    public Individual[] crossing_CX(Individual ind1, Individual ind2) {
+//        if()
+//    }
+//    public Individual[] crossing_PMX(Individual ind1, Individual ind2) {
+//        if()
+//    }
 }
 
