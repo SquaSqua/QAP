@@ -1,12 +1,9 @@
-import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Individual implements Comparable<Individual> {
     private int[] permutation;
     int[] fitnessArray;
-    private ArrayList<Individual> setOfDominated = new ArrayList<>();
-    private int dominatingCount;
-    private int rank;
+    private double crowdingDistance;
 
     public Individual(int[] permutation, int flowsNumber) {
         this.permutation = permutation;
@@ -39,28 +36,12 @@ public class Individual implements Comparable<Individual> {
         this.permutation = permutation;
     }
 
-    public int getRank() {
-        return rank;
+    public void setCrowdingDistance(double crowdingDistance) {
+        this.crowdingDistance = crowdingDistance;
     }
 
-    public void setRank(int rank) {
-        this.rank = rank;
-    }
-
-    public int getDominatingCount() {
-        return dominatingCount;
-    }
-
-    public void setDominatingCount(int dominatingCount) {
-        this.dominatingCount = dominatingCount;
-    }
-
-    public ArrayList<Individual> getSetOfDominated() {
-        return setOfDominated;
-    }
-
-    public void setSetOfDominated(ArrayList<Individual> setOfDominated) {
-        this.setOfDominated = setOfDominated;
+    public double getCrowdingDistance() {
+        return crowdingDistance;
     }
 
     @Override

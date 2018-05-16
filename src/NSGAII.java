@@ -1,5 +1,6 @@
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
 
@@ -11,9 +12,9 @@ public class NSGAII {
     private double cross_prob;
     private double mut_prob;
     private int flowsNumber;
-    String instanceFile;
+    private String instanceFile;
     ArrayList<Individual> population = new ArrayList<>();
-    ArrayList<ArrayList<Individual>> paretoFronts = new ArrayList<>();
+    private ArrayList<ArrayList<Individual>> paretoFronts = new ArrayList<>();
 
     public NSGAII(String instanceFile, int generations, int pop_size, double cross_prob, double mut_prob) {
         this.generations = generations;
@@ -31,7 +32,7 @@ public class NSGAII {
             matricesArray = reader.getMatricesArray();
             flowsNumber = reader.getFlowsNumber();
             int individual_size = reader.getIndividual_size();
-            ArrayList<Integer> list = new ArrayList();
+            ArrayList<Integer> list = new ArrayList<>();
             for (int i = 0; i < individual_size; i++) {
                 list.add(i);
             }
@@ -128,13 +129,38 @@ public class NSGAII {
             }
 
         }
-//        for(ArrayList<Individual> a : paretoFronts) {
-//            System.out.println("*************************");
-//            for(Individual i : a) {
-//                i.toString();
-//            }
-//        }
+
+        crowdingDistanceSetter();
+
+        for(ArrayList<Individual> a : paretoFronts) {
+            System.out.println("*************************");
+            for(Individual i : a) {
+                i.toString();
+                System.out.println("CrowdingDistance: " + i.getCrowdingDistance());
+            }
+        }
         return dataGenerator();
+    }
+
+    public void crowdingDistanceSetter() {
+        for(int i = 0; i < paretoFronts.size(); i++) {
+            Collections.sort(paretoFronts.get(i), new InnerFrontComparator());
+        }
+        for(int i = 0; i < paretoFronts.size(); i++) {
+            paretoFronts.get(i).get(0).setCrowdingDistance(Double.POSITIVE_INFINITY);
+            paretoFronts.get(i).get(paretoFronts.get(i).size() - 1).setCrowdingDistance(Double.POSITIVE_INFINITY);
+
+            for(int j = 1; j < paretoFronts.get(i).size() - 1; j++) {
+                Individual currentInd = paretoFronts.get(i).get(j);
+                double crowdingDistance = 0;
+                for(int z = 0; z < currentInd.fitnessArray.length; z++) {
+                    double numerator = Math.abs(paretoFronts.get(i).get(j + 1).fitnessArray[z] - paretoFronts.get(i).get(j - 1).fitnessArray[z]);
+                    double denominator = Math.abs(paretoFronts.get(i).get(0).fitnessArray[z] - paretoFronts.get(i).get(paretoFronts.get(i).size() - 1).fitnessArray[z]);
+                    crowdingDistance += numerator / denominator;
+                }
+                currentInd.setCrowdingDistance(crowdingDistance);
+            }
+        }
     }
 
     public String dataGenerator() {
@@ -152,7 +178,8 @@ public class NSGAII {
         result = sB.toString();
         return result;
     }
-//    public void putInPareto() {
+
+    //    public void putInPareto() {
 //        for(int i = 0; i < population.size(); i++) {
 //            Individual obj1 = population.get(i);
 //            ArrayList<Individual> setOfDominated = new ArrayList<>();
@@ -299,6 +326,7 @@ public class NSGAII {
         }
         return result;
     }
+
 //    public Individual[] crossing_CX(Individual ind1, Individual ind2) {
 //        if()
 //    }
