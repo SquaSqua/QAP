@@ -1,6 +1,5 @@
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Random;
 
@@ -11,17 +10,19 @@ public class NSGAII {
     private int pop_size;
     private double cross_prob;
     private double mut_prob;
+    private int tournamentSize;
     private int flowsNumber;
     private String instanceFile;
     ArrayList<Individual> population = new ArrayList<>();
     private ArrayList<ArrayList<Individual>> paretoFronts = new ArrayList<>();
 
-    public NSGAII(String instanceFile, int generations, int pop_size, double cross_prob, double mut_prob) {
+    public NSGAII(String instanceFile, int generations, int pop_size, double cross_prob, double mut_prob, int tournamentSize) {
         this.generations = generations;
         this.pop_size = pop_size;
         this.instanceFile = instanceFile;
         this.cross_prob = cross_prob;
         this.mut_prob = mut_prob;
+        this.tournamentSize = tournamentSize;
     }
 
     public void initialize() {
@@ -142,6 +143,14 @@ public class NSGAII {
         return dataGenerator();
     }
 
+    public void rankAssignment() {
+        for(int i = 0; i < paretoFronts.size(); i++) {
+            for(int j = 0; j < paretoFronts.get(i).size(); j++) {
+                paretoFronts.get(i).get(j).setRank(i + 1);
+            }
+        }
+    }
+
     public void crowdingDistanceSetter() {
         for(int i = 0; i < paretoFronts.size(); i++) {
             Collections.sort(paretoFronts.get(i), new InnerFrontComparator());
@@ -251,6 +260,24 @@ public class NSGAII {
 //    }
 
     /*************************************************************************************************************************/
+
+    public Individual tournamentSelection() {
+        Individual[] tournament = new Individual[tournamentSize];
+        Random random = new Random();
+        for(int i = 0; i < tournamentSize; i++) {
+            tournament[i] = population.get(random.nextInt(pop_size));
+        }
+        Individual max = tournament[0];
+        for(int i = 0; i < tournamentSize; i++) {
+            if(tournament[i].getRank() < max.getRank()) {
+                max = tournament[i];
+            }
+            else if(tournament[i].getRank() == max.getRank() && tournament[i].getCrowdingDistance() > max.getCrowdingDistance()) {
+                max = tournament[i];
+            }
+        }
+        return max;
+    }
 
 //    public ArrayList<Individual> matingPool() {
 //

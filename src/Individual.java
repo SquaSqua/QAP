@@ -3,6 +3,7 @@ import java.util.Arrays;
 public class Individual implements Comparable<Individual> {
     private int[] permutation;
     int[] fitnessArray;
+    private int rank;
     private double crowdingDistance;
 
     public Individual(int[] permutation, int flowsNumber) {
@@ -58,5 +59,13 @@ public class Individual implements Comparable<Individual> {
                 result = 0;
         }
         return result;
+    }
+
+    public int getRank() {
+        return rank;
+    }
+
+    public void setRank(int rank) {
+        this.rank = rank;
     }
 }
