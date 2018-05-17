@@ -25,6 +25,33 @@ public class NSGAII {
         this.tournamentSize = tournamentSize;
     }
 
+    public void NSGAII() {
+        initialize();
+        frontGenerator();
+        rankAssignment();
+        crowdingDistanceSetter();
+        for(int z = 0; z < generations; z++) {
+            population.addAll(matingPool());
+            frontGenerator();
+            rankAssignment();
+            crowdingDistanceSetter();
+            ArrayList<Individual> nextGeneration = new ArrayList<>();
+            int frontNumber = 0;
+            while (nextGeneration.size() < pop_size) {
+                if (paretoFronts.get(frontNumber).size() < pop_size - nextGeneration.size()) {
+                    nextGeneration.addAll(paretoFronts.get(frontNumber));
+                    frontNumber++;
+                } else {
+                    crowdingDistanceSorting();
+                    for (int i = nextGeneration.size(); i < pop_size; i++) {
+                        nextGeneration.add(paretoFronts.get(frontNumber).get(i));
+                    }
+                }
+            }
+            population = nextGeneration;
+        }
+    }
+
     public void initialize() {
         QAPIO reader = new QAPIO();
         try {
@@ -57,13 +84,17 @@ public class NSGAII {
 
     public void setFitnesses() {
         for (int i = 0; i < population.size(); i++) {
-            for (int j = 0; j < population.get(i).fitnessArray.length; j++) {
-                population.get(i).fitnessArray[j] = population.get(i).fitness(distanceMatrix, matricesArray[j]);
-            }
+            setFitness(population.get(i));
         }
     }
 
-    public String frontGenerator() {
+    public void setFitness(Individual ind) {
+        for (int j = 0; j < ind.fitnessArray.length; j++) {
+            ind.fitnessArray[j] = ind.fitness(distanceMatrix, matricesArray[j]);
+        }
+    }
+
+    public void frontGenerator() {
 
         paretoFronts.add(new ArrayList<>());
         for(int i = 0; i < population.size(); i++) {
@@ -130,17 +161,16 @@ public class NSGAII {
             }
 
         }
-
-        crowdingDistanceSetter();
-
-        for(ArrayList<Individual> a : paretoFronts) {
-            System.out.println("*************************");
-            for(Individual i : a) {
-                i.toString();
-                System.out.println("CrowdingDistance: " + i.getCrowdingDistance());
-            }
-        }
-        return dataGenerator();
+//        crowdingDistanceSetter();
+//
+//        for(ArrayList<Individual> a : paretoFronts) {
+//            System.out.println("*************************");
+//            for(Individual i : a) {
+//                i.toString();
+//                System.out.println("CrowdingDistance: " + i.getCrowdingDistance());
+//            }
+//        }
+//        return dataGenerator();
     }
 
     public void rankAssignment() {
@@ -151,10 +181,20 @@ public class NSGAII {
         }
     }
 
-    public void crowdingDistanceSetter() {
+    public void objectiveSorting() {
         for(int i = 0; i < paretoFronts.size(); i++) {
-            Collections.sort(paretoFronts.get(i), new InnerFrontComparator());
+            Collections.sort(paretoFronts.get(i), new ObjectiveFrontComparator());
         }
+    }
+
+    public void crowdingDistanceSorting() {
+        for(int i = 0; i < paretoFronts.size(); i++) {
+            Collections.sort(paretoFronts.get(i), new ObjectiveFrontComparator());
+        }
+    }
+
+    public void crowdingDistanceSetter() {
+        objectiveSorting();
         for(int i = 0; i < paretoFronts.size(); i++) {
             paretoFronts.get(i).get(0).setCrowdingDistance(Double.POSITIVE_INFINITY);
             paretoFronts.get(i).get(paretoFronts.get(i).size() - 1).setCrowdingDistance(Double.POSITIVE_INFINITY);
@@ -259,7 +299,7 @@ public class NSGAII {
 ////        }
 //    }
 
-    /*************************************************************************************************************************/
+    /******************************************************************************************************************/
 
     public Individual tournamentSelection() {
         Individual[] tournament = new Individual[tournamentSize];
@@ -276,12 +316,25 @@ public class NSGAII {
                 max = tournament[i];
             }
         }
-        return max;
+        Individual res = new Individual(max.getPermutation(), max.fitnessArray.length);
+        setFitness(res);
+        return res;
     }
 
-//    public ArrayList<Individual> matingPool() {
-//
-//    }
+    public ArrayList<Individual> matingPool() {
+
+        ArrayList<Individual> offspring = new ArrayList<>();
+        while(offspring.size() < pop_size) {
+            Individual ind1 = tournamentSelection();
+            Individual ind2 = tournamentSelection();
+            Individual[] crossed = crossing_OX(ind1, ind2);
+            mutation(crossed[0]);
+            mutation(crossed[1]);
+            offspring.add(crossed[0]);
+            offspring.add(crossed[1]);
+        }
+        return offspring;
+    }
 
     public void mutation(Individual ind) {
         int[] permutation = ind.getPermutation();
@@ -326,9 +379,11 @@ public class NSGAII {
 
         }
         else {
-            result[0] = ind1;
-            result[1] = ind2;
+            result[0] = new Individual(ind1.getPermutation(), ind1.fitnessArray.length);
+            result[1] = new Individual(ind2.getPermutation(), ind2.fitnessArray.length);
         }
+        setFitness(result[0]);
+        setFitness(result[1]);
         return result;
     }
 

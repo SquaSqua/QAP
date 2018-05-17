@@ -1,6 +1,6 @@
 import java.util.Comparator;
 
-public class InnerFrontComparator implements Comparator<Individual> {
+public class ObjectiveFrontComparator implements Comparator<Individual> {
 
     @Override
     public int compare(Individual o1, Individual o2) {
