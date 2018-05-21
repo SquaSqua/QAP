@@ -5,6 +5,7 @@ public class Runner {
         String instanceFile = "src//instances//KC10-2fl-1rl.dat";
         NSGAII nsga2 = new NSGAII(instanceFile, 1, 10,1, 0.5, 5);
         nsga2.NSGAII();
+        System.out.println("SDF");
 //        String results = "data.csv";
 //        try
 //        {

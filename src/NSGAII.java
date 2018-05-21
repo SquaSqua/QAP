@@ -43,12 +43,14 @@ public class NSGAII {
                     frontNumber++;
                 } else {
                     crowdingDistanceSorting();
-                    for (int i = nextGeneration.size(); i < pop_size; i++) {
+                    for (int i = 0; nextGeneration.size() < pop_size; i++) {
                         nextGeneration.add(paretoFronts.get(frontNumber).get(i));
                     }
                 }
             }
             population = nextGeneration;
+
+            frontGenerator();
         }
     }
 
@@ -96,6 +98,7 @@ public class NSGAII {
 
     public void frontGenerator() {
 
+        paretoFronts.clear();
         paretoFronts.add(new ArrayList<>());
         for(int i = 0; i < population.size(); i++) {
             for (int j = 0; j < paretoFronts.size(); j++) {
