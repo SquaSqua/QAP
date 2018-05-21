@@ -15,6 +15,7 @@ public class NSGAII {
     private String instanceFile;
     ArrayList<Individual> population = new ArrayList<>();
     private ArrayList<ArrayList<Individual>> paretoFronts = new ArrayList<>();
+    ArrayList<Individual> archive = new ArrayList<>();
 
     public NSGAII(String instanceFile, int generations, int pop_size, double cross_prob, double mut_prob, int tournamentSize) {
         this.generations = generations;
@@ -27,13 +28,16 @@ public class NSGAII {
 
     public void NSGAII() {
         initialize();
-        frontGenerator();
-        rankAssignment();
+        paretoFronts = frontGenerator(population);
+        rankAssignment(paretoFronts);
+        archive = paretoFronts.get(0);
         crowdingDistanceSetter();
         for(int z = 0; z < generations; z++) {
-            population.addAll(matingPool());
-            frontGenerator();
-            rankAssignment();
+            ArrayList<Individual> offspring = matingPool();
+            checkArchive(offspring);
+            population.addAll(offspring);
+            paretoFronts = frontGenerator(population);
+            rankAssignment(paretoFronts);
             crowdingDistanceSetter();
             ArrayList<Individual> nextGeneration = new ArrayList<>();
             int frontNumber = 0;
@@ -50,7 +54,8 @@ public class NSGAII {
             }
             population = nextGeneration;
 
-            frontGenerator();
+            paretoFronts = frontGenerator(population);
+            rankAssignment(paretoFronts);
         }
     }
 
@@ -84,6 +89,26 @@ public class NSGAII {
 
     }
 
+    public void checkArchive(ArrayList<Individual> group) {
+        for(int i = 0; i < group.size(); i++) {
+            boolean nonDominated = true;
+            for(int j = 0; nonDominated && j < archive.size(); j++) {
+                if(group.get(i).compareTo(archive.get(j)) == -1) {
+                    if(!archive.contains(group.get(i)))
+                        archive.set(j, group.get(i));
+                    else {
+                        archive.remove(j);
+                        j--;
+                    }
+                }
+                else if(group.get(i).compareTo(archive.get(j)) == 1)
+                    nonDominated = false;
+            }
+            if(nonDominated && !archive.contains(group.get(i)))
+                archive.add(group.get(i));
+        }
+    }
+
     public void setFitnesses() {
         for (int i = 0; i < population.size(); i++) {
             setFitness(population.get(i));
@@ -96,62 +121,63 @@ public class NSGAII {
         }
     }
 
-    public void frontGenerator() {
+    public ArrayList<ArrayList<Individual>> frontGenerator(ArrayList<Individual> group) {
 
-        paretoFronts.clear();
-        paretoFronts.add(new ArrayList<>());
-        for(int i = 0; i < population.size(); i++) {
-            for (int j = 0; j < paretoFronts.size(); j++) {
-                ArrayList<Individual> currentFront = paretoFronts.get(j);
+        ArrayList<ArrayList<Individual>> fronts = new ArrayList<>();
+//        paretoFronts.clear();
+        fronts.add(new ArrayList<>());
+        for(int i = 0; i < group.size(); i++) {
+            for (int j = 0; j < fronts.size(); j++) {
+                ArrayList<Individual> currentFront = fronts.get(j);
                 if (currentFront.size() == 0) {
-                    currentFront.add(population.get(i));
+                    currentFront.add(group.get(i));
                     break;
                 } else {
                     for (int k = 0; k < currentFront.size(); k++) {
-                        int compared = population.get(i).compareTo(currentFront.get(k));
+                        int compared = group.get(i).compareTo(currentFront.get(k));
                         if ((compared == 0) && (k == currentFront.size() - 1)) {
-                            currentFront.add(population.get(i));
-                            if(i < population.size() - 1) {
+                            currentFront.add(group.get(i));
+                            if(i < group.size() - 1) {
                                 i++;
                                 j = -1;
                             }else {
-                                j = paretoFronts.size();
+                                j = fronts.size();
                             }
                             break;
                         } else if (compared == -1) {
                             //zamiana miejsc
                             ArrayList<Individual> betterFront = new ArrayList<>();
-                            betterFront.add(population.get(i));
+                            betterFront.add(group.get(i));
                             for(int z = 0; z < k; ) {
                                 betterFront.add(currentFront.get(z));
                                 currentFront.remove(z);
                                 k--;
                             }
                             for(int z = 1; z < currentFront.size(); z++) {
-                                if(population.get(i).compareTo(currentFront.get(z)) == 0) {
+                                if(group.get(i).compareTo(currentFront.get(z)) == 0) {
                                     betterFront.add(currentFront.get(z));
                                     currentFront.remove(z);
                                     z--;
                                 }
                             }
-                            paretoFronts.add(j, betterFront);
-                            if(i < population.size() - 1) {
+                            fronts.add(j, betterFront);
+                            if(i < group.size() - 1) {
                                 i++;
                                 j = -1;
                             }else {
-                                j = paretoFronts.size();
+                                j = fronts.size();
                             }
                             break;
                         } else if (compared == 1) {
                             //nowy front
-                            if (paretoFronts.size() < j + 2) {
-                                paretoFronts.add(new ArrayList<>());
-                                paretoFronts.get(j + 1).add(population.get(i));
-                                if(i < population.size() - 1) {
+                            if (fronts.size() < j + 2) {
+                                fronts.add(new ArrayList<>());
+                                fronts.get(j + 1).add(group.get(i));
+                                if(i < group.size() - 1) {
                                     i++;
                                     j = -1;
                                 }else {
-                                    j = paretoFronts.size();
+                                    j = fronts.size();
                                 }
                                 break;
                             }
@@ -162,7 +188,6 @@ public class NSGAII {
                     }
                 }
             }
-
         }
 //        crowdingDistanceSetter();
 //
@@ -174,12 +199,13 @@ public class NSGAII {
 //            }
 //        }
 //        return dataGenerator();
+        return fronts;
     }
 
-    public void rankAssignment() {
-        for(int i = 0; i < paretoFronts.size(); i++) {
-            for(int j = 0; j < paretoFronts.get(i).size(); j++) {
-                paretoFronts.get(i).get(j).setRank(i + 1);
+    public void rankAssignment(ArrayList<ArrayList<Individual>> fronts) {
+        for(int i = 0; i < fronts.size(); i++) {
+            for(int j = 0; j < fronts.get(i).size(); j++) {
+                fronts.get(i).get(j).setRank(i + 1);
             }
         }
     }
@@ -206,8 +232,10 @@ public class NSGAII {
                 Individual currentInd = paretoFronts.get(i).get(j);
                 double crowdingDistance = 0;
                 for(int z = 0; z < currentInd.fitnessArray.length; z++) {
-                    double numerator = Math.abs(paretoFronts.get(i).get(j + 1).fitnessArray[z] - paretoFronts.get(i).get(j - 1).fitnessArray[z]);
-                    double denominator = Math.abs(paretoFronts.get(i).get(0).fitnessArray[z] - paretoFronts.get(i).get(paretoFronts.get(i).size() - 1).fitnessArray[z]);
+                    double numerator = Math.abs(paretoFronts.get(i).get(j + 1).fitnessArray[z]
+                            - paretoFronts.get(i).get(j - 1).fitnessArray[z]);
+                    double denominator = Math.abs(paretoFronts.get(i).get(0).fitnessArray[z]
+                            - paretoFronts.get(i).get(paretoFronts.get(i).size() - 1).fitnessArray[z]);
                     crowdingDistance += numerator / denominator;
                 }
                 currentInd.setCrowdingDistance(crowdingDistance);
@@ -301,8 +329,6 @@ public class NSGAII {
 ////            }
 ////        }
 //    }
-
-    /******************************************************************************************************************/
 
     public Individual tournamentSelection() {
         Individual[] tournament = new Individual[tournamentSize];
@@ -418,5 +444,18 @@ public class NSGAII {
 //    public Individual[] crossing_PMX(Individual ind1, Individual ind2) {
 //        if()
 //    }
+
+    public double ED_measure() {
+        double sumED = 0;
+        for(int i = 0; i < archive.size(); i++) {
+            Individual ind = archive.get(i);
+            sumED += Math.sqrt(ind.fitnessArray[0] * ind.fitnessArray[0] + ind.fitnessArray[1]* ind.fitnessArray[1]);
+        }
+        return sumED / archive.size();
+    }
+
+    public int PFS_measure() {
+        return paretoFronts.get(0).size();
+    }
 }
 
