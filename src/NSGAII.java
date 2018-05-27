@@ -1,3 +1,4 @@
+import java.awt.*;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,6 +7,8 @@ import java.util.Random;
 public class NSGAII {
     private int[][] distanceMatrix;
     private int[][][] matricesArray;
+    Point ideal = new Point();
+    Point nadir = new Point();
     private int generations;
     private int pop_size;
     private double cross_prob;
@@ -26,12 +29,17 @@ public class NSGAII {
         this.tournamentSize = tournamentSize;
     }
 
-    public void NSGAII() {
+    public String NSGAII() {
+
+        String measures = "", archivePrint = "";
+        StringBuilder sBMeasures = new StringBuilder(measures);
+        StringBuilder sBArchivePrint = new StringBuilder(archivePrint);
         initialize();
         paretoFronts = frontGenerator(population);
         rankAssignment(paretoFronts);
         archive = paretoFronts.get(0);
         crowdingDistanceSetter();
+
         for(int z = 0; z < generations; z++) {
             ArrayList<Individual> offspring = matingPool();
             checkArchive(offspring);
@@ -53,10 +61,17 @@ public class NSGAII {
                 }
             }
             population = nextGeneration;
-
             paretoFronts = frontGenerator(population);
             rankAssignment(paretoFronts);
         }
+        sBMeasures.append(ED_measure(paretoFronts.get(0)) + ", " + PFS_measure() + ", " + HV_measure());
+        sBMeasures.append("\n");
+        sBArchivePrint.append(printPF(archive, sBArchivePrint));
+//        System.out.println(sBArchivePrint.toString());
+        sBMeasures.append(sBArchivePrint.toString());
+        measures = sBMeasures.toString();
+
+        return measures;
     }
 
     public void initialize() {
@@ -67,6 +82,9 @@ public class NSGAII {
             matricesArray = reader.getMatricesArray();
             flowsNumber = reader.getFlowsNumber();
             int individual_size = reader.getIndividual_size();
+
+            findIdealAndNadir(individual_size);
+
             ArrayList<Integer> list = new ArrayList<>();
             for (int i = 0; i < individual_size; i++) {
                 list.add(i);
@@ -247,88 +265,22 @@ public class NSGAII {
         String result = "";
         StringBuilder sB = new StringBuilder(result);
         for(ArrayList<Individual> a : paretoFronts) {
-            for(Individual i : a) {
-                for(int j = 0; j < i.fitnessArray.length; j++) {
-                    sB.append(i.fitnessArray[j] + ", ");
-                }
-                sB.append("\n");
-            }
+            sB.append(printPF(a, sB));
             sB.append("\n");
         }
         result = sB.toString();
         return result;
     }
 
-    //    public void putInPareto() {
-//        for(int i = 0; i < population.size(); i++) {
-//            Individual obj1 = population.get(i);
-//            ArrayList<Individual> setOfDominated = new ArrayList<>();
-//            int dominatingCount = 0;
-//            for(int j = 0; j < population.size(); j++) {
-//                Individual obj2 = population.get(j);
-//                int compared = obj1.compareTo(obj2);
-//                if(compared == -1) {
-//                    setOfDominated.add(obj2);
-//                }
-//                else {
-//                    if(compared == 1) {
-//                        dominatingCount += 1;
-//                    }
-//                }
-//            }
-//            obj1.setDominatingCount(dominatingCount);
-//            obj1.setSetOfDominated(setOfDominated);
-//        }
-//
-//        for(Individual i : population) {
-//            System.out.println("********************");
-//            i.toString();
-//            System.out.println("gorszych ode mnie " + i.getDominatingCount() + ", lepszych ode mnie " + i.getSetOfDominated().size());
-//        }
-//
-//
-//
-//        ArrayList<Individual> temp = new ArrayList<>(population);
-//        int currentRank = 1;
-//        ArrayList<Individual> currentFront = new ArrayList<>();
-//        boolean nextFront = false;
-//        ArrayList<Individual> restList = new ArrayList<>();
-//        do {
-//            for(Iterator itr = temp.iterator(); itr.hasNext();) {
-//                Individual obj = (Individual)itr.next();
-//                if(obj.getDominatingCount() == 0) {
-//                    obj.setRank(currentRank);
-//                    currentFront.add(obj);
-//                    for(Iterator internItr = obj.getSetOfDominated().iterator(); internItr.hasNext(); ) {
-//                        Individual obj2 = (Individual)internItr.next();
-//                        obj2.setDominatingCount(obj2.getDominatingCount() - 1);
-//                        if(obj2.getDominatingCount() == 0) {
-//                            nextFront = true;
-//                        }
-//                    }
-//                    if(nextFront) {
-//                        nextFront = false;
-//                        paretoFronts.add(currentFront);
-//                        currentFront = new ArrayList<>();
-//                    }
-//                }
-//                else {
-//                    restList.add(obj);
-//                }
-//            }
-//            temp = restList;
-//            restList = new ArrayList<>();
-//        }
-//        while(!temp.isEmpty());
-//
-//
-////        for(ArrayList<Individual> a : paretoFronts) {
-////            System.out.println("********************");
-////            for(Individual i : a) {
-////                i.toString();
-////            }
-////        }
-//    }
+    public String printPF(ArrayList<Individual> a, StringBuilder sB) {
+        for(Individual i : a) {
+            for(int j = 0; j < i.fitnessArray.length; j++) {
+                sB.append(i.fitnessArray[j] + ", ");
+            }
+            sB.append("\n");
+        }
+        return sB.toString();
+    }
 
     public Individual tournamentSelection() {
         Individual[] tournament = new Individual[tournamentSize];
@@ -420,7 +372,6 @@ public class NSGAII {
         int j = 0;
         int[] result = res;
         for(int i = 0; i < perm2.length; i++) {
-
             boolean contains = false;
             for(int z = first; z <= second && !contains; z++) {
                 if(perm1[z] == perm2[i]) {
@@ -428,11 +379,12 @@ public class NSGAII {
                 }
             }
             if(!contains) {
-                result[j] = perm2[i];
-                j++;
                 if(j == first) {
                     j = second + 1;
                 }
+                result[j] = perm2[i];
+                j++;
+
             }
         }
         return result;
@@ -445,17 +397,67 @@ public class NSGAII {
 //        if()
 //    }
 
-    public double ED_measure() {
+    public String ED_measure(ArrayList<Individual> group) {
         double sumED = 0;
-        for(int i = 0; i < archive.size(); i++) {
-            Individual ind = archive.get(i);
-            sumED += Math.sqrt(ind.fitnessArray[0] * ind.fitnessArray[0] + ind.fitnessArray[1]* ind.fitnessArray[1]);
+        for(int i = 0; i < group.size(); i++) {
+            Individual ind = group.get(i);
+            sumED += Math.round(Math.sqrt(Long.valueOf((ind.fitnessArray[0] - ideal.x) * (ind.fitnessArray[0] - ideal.x) + (ind.fitnessArray[1] - ideal.y) * (ind.fitnessArray[1] - ideal.y))));
         }
-        return sumED / archive.size();
+        sumED = (sumED / group.size());
+
+        return Math.round(sumED) + "";
     }
 
-    public int PFS_measure() {
-        return paretoFronts.get(0).size();
+    public String PFS_measure() {
+        return archive.size() + "";
     }
+
+    public double HV_measure() {
+        Collections.sort(archive, new ObjectiveFrontComparator());
+        Long hyperVolume = 0L;
+        int lastY = nadir.y;
+        for(int i = 0; i < archive.size(); i++) {
+            hyperVolume += ((nadir.x - archive.get(i).fitnessArray[0]) * (lastY - archive.get(i).fitnessArray[1]));
+            lastY = archive.get(i).fitnessArray[1];
+        }
+        return hyperVolume;
+    }
+
+    public void findIdealAndNadir(int ind_size) {
+        int minDistance = Integer.MAX_VALUE;
+        int maxDistance = 0;
+        for(int i = 0; i < distanceMatrix.length; i++) {
+            for(int j = 0; j < distanceMatrix[i].length; j++) {
+                if(maxDistance < distanceMatrix[i][j])
+                    maxDistance = distanceMatrix[i][j];
+                else if(minDistance > distanceMatrix[i][j] && distanceMatrix[i][j] != 0) {
+                    minDistance = distanceMatrix[i][j];
+                }
+            }
+        }
+        for(int i = 0; i < matricesArray.length; i++) {
+            int min = Integer.MAX_VALUE, max = 0;
+            for(int j = 0; j < matricesArray[i].length; j++) {
+                for(int k = 0; k < matricesArray[i][j].length ; k++) {
+                    int temp = matricesArray[i][j][k];
+                    if(temp < min && temp != 0)
+                        min = temp;
+                    else if(temp > max)
+                        max = temp;
+                }
+
+            }
+            if(i == 0) {
+                ideal.x = min * minDistance * ind_size;
+                nadir.x = max * maxDistance * ind_size;
+            }
+            else {
+                ideal.y = min * minDistance * ind_size;
+                nadir.y = max * maxDistance * ind_size;
+            }
+
+        }
+    }
+
 }
 
