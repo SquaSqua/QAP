@@ -16,6 +16,8 @@ public class NSGAII {
     private int tournamentSize;
     private int flowsNumber;
     private String instanceFile;
+    private int max_distance;
+    private int max_flows;
     ArrayList<Individual> population = new ArrayList<>();
     private ArrayList<ArrayList<Individual>> paretoFronts = new ArrayList<>();
     ArrayList<Individual> archive = new ArrayList<>();
@@ -82,6 +84,8 @@ public class NSGAII {
             matricesArray = reader.getMatricesArray();
             flowsNumber = reader.getFlowsNumber();
             int individual_size = reader.getIndividual_size();
+            max_distance = reader.getMax_distance();
+            max_flows = reader.getMax_flows();
 
             findIdealAndNadir(individual_size);
 
@@ -424,36 +428,39 @@ public class NSGAII {
     }
 
     public void findIdealAndNadir(int ind_size) {
+
         int minDistance = Integer.MAX_VALUE;
-        int maxDistance = 0;
+//        int maxDistance = 0;
         for(int i = 0; i < distanceMatrix.length; i++) {
             for(int j = 0; j < distanceMatrix[i].length; j++) {
-                if(maxDistance < distanceMatrix[i][j])
-                    maxDistance = distanceMatrix[i][j];
-                else if(minDistance > distanceMatrix[i][j] && distanceMatrix[i][j] != 0) {
+                if(minDistance > distanceMatrix[i][j] && distanceMatrix[i][j] != 0) {
                     minDistance = distanceMatrix[i][j];
+//                else if(maxDistance < distanceMatrix[i][j])
+//                    maxDistance = distanceMatrix[i][j];
                 }
             }
         }
         for(int i = 0; i < matricesArray.length; i++) {
-            int min = Integer.MAX_VALUE, max = 0;
+            int min = Integer.MAX_VALUE/*, max = 0*/;
             for(int j = 0; j < matricesArray[i].length; j++) {
                 for(int k = 0; k < matricesArray[i][j].length ; k++) {
                     int temp = matricesArray[i][j][k];
                     if(temp < min && temp != 0)
                         min = temp;
-                    else if(temp > max)
-                        max = temp;
+//                    else if(temp > max)
+//                        max = temp;
                 }
 
             }
             if(i == 0) {
                 ideal.x = min * minDistance * ind_size;
-                nadir.x = max * maxDistance * ind_size;
+                nadir.x = max_flows * max_distance * ind_size;
+//                nadir.x = max * maxDistance * ind_size;
             }
             else {
                 ideal.y = min * minDistance * ind_size;
-                nadir.y = max * maxDistance * ind_size;
+                nadir.y = max_flows * max_distance * ind_size;
+//                nadir.y = max * maxDistance * ind_size;
             }
 
         }

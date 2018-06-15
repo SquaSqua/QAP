@@ -7,6 +7,8 @@ public class QAPIO
 {
     private int individual_size;
     private int flowsNumber;
+    private int max_distance;
+    private int max_flows;
     private int[][][] matricesArray;
     private int[][] distanceMatrix;
 
@@ -15,8 +17,10 @@ public class QAPIO
         BufferedReader in = new BufferedReader(new FileReader(instanceFile));
         try {
             String[] header = in.readLine().split(" +");
-            individual_size = Integer.parseInt(header[0]);
-            flowsNumber = Integer.parseInt(header[1]);
+            individual_size = Integer.parseInt(header[2]);
+            flowsNumber = Integer.parseInt(header[5]);
+            max_distance = Integer.parseInt(header[8]);
+            max_flows =  Integer.parseInt(header[12]);
             matricesArray = new int[flowsNumber][individual_size][individual_size];
 
             distanceMatrix = readArray(in, individual_size);
@@ -52,21 +56,15 @@ public class QAPIO
     public int getFlowsNumber() {
         return flowsNumber;
     }
-    public void setFlowsNumber(int flowsNumber) {
-        flowsNumber = flowsNumber;
-    }
     public int getIndividual_size() {
         return individual_size;
     }
-    public void setIndividual_size(int size) {
-        this.individual_size = size;
-    }
     public int[][] getDistanceMatrix() { return distanceMatrix; }
-    public void setDistanceMatrix(int[][] distanceMatrix) {
-        this.distanceMatrix = distanceMatrix;
-    }
     public int[][][] getMatricesArray() { return matricesArray; }
-    public void setMatricesArray(int[][][] matricesArray) {
-        this.matricesArray = matricesArray;
+    public int getMax_distance() {
+        return max_distance;
+    }
+    public int getMax_flows() {
+        return max_flows;
     }
 }
